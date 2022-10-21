@@ -169,8 +169,6 @@ def main():
                 elif event.key in (K_DOWN, K_s) and isValidMove(mainBoard, DOWN):
 
                     Move = DOWN
-            elif event.type == QUIT:
-                running = False
 
 
                 elif event.key == K_r:
@@ -205,6 +203,9 @@ def main():
                     mainBoard = getStartingBoard()
                     SOLVEDBOARD = getStartingBoard()
                     solutionSeq = []
+                    
+            elif event.type == QUIT:
+                running = False
 
         if Move:
 
