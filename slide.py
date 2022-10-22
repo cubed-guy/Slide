@@ -2,40 +2,47 @@ import pygame
 import sys
 import random
 from pygame.locals import *
+from pygame import mixer
+
+pygame.init()
+
+mixer.music.load("background.wav")
+mixer.music.play()
 
 # declarations
 # number of columns n rows in the board, will have to change in case of diff types of boards
 BWIDTH = BHEIGHT = 4
 TSIZE = 80  # tile size
-WWIDTH = 640  # window width
-WHEIGHT = 480  # window height
+WWIDTH = 840  # window width
+WHEIGHT = 680  # window height
 FPS = 150  # slide speed
 BLANK = None
 
 GENERATIONMOVES = 200
 # colours
 #                 R    G    B
-BLACK = (0,   0,   0)
+BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BEIGE = (223, 180, 143)
-DARKTURQUOISE = (3,  54,  73)
+DARKTURQUOISE = (3, 54, 73)
 PASTELBLUE = (131, 190, 215)
+GREEN = (0, 255, 187)
 PASTELPINK = (255, 192, 245)
-GREEN = (41, 210,  80)
-MAROON = (127,  31,  69)
-COBALTBLUE = (83,   9, 255)
-OLIVEGREEN = (23,  57,  28)
+GREEN = (41, 210, 80)
+MAROON = (127, 31, 69)
+COBALTBLUE = (83, 9, 255)
+OLIVEGREEN = (23, 57, 28)
 TEAL = (85, 210, 190)
 CYAN = (108, 232, 240)
-BROWN = (129,  74,  60)
+BROWN = (129, 74, 60)
 SAND = (255, 198, 131)
 
 # all button stuff
-BGCOLOR = SAND
+BGCOLOR = (0, 11, 31)
 TILECOLOR = MAROON
 TC = WHITE
 BORDERCOLOR = DARKTURQUOISE
-FONTSIZE = 20
+FONTSIZE = 25
 BUTTONCOLOR = WHITE
 BUTTONTC = BLACK
 MESSAGECOLOR = WHITE
@@ -51,7 +58,7 @@ LEFT = 'left'
 RIGHT = 'right'
 
 # timer
-screen = pygame.display.set_mode((WWIDTH-100, WHEIGHT-100))
+screen = pygame.display.set_mode((WWIDTH - 100, WHEIGHT - 100))
 clock = pygame.time.Clock()
 
 # button setup
@@ -60,7 +67,7 @@ clock = pygame.time.Clock()
 def main():
 
     global CLOCK, surfdisplay, BASICFONT
-    global SURF_RESET, RECT_RESET, SURF_NEW, RECT_NEW, SURF_SOLVE, RECT_SOLVE, RECT_QUIT, SURF_QUIT
+    global SURF_RESET, RECT_RESET, SURF_NEW, RECT_NEW, SURF_SOLVE, RECT_SOLVE
     global BWIDTH, BHEIGHT
 
     pygame.init()
@@ -68,19 +75,17 @@ def main():
 
     surfdisplay = pygame.display.set_mode((WWIDTH, WHEIGHT), pygame.RESIZABLE)
 
-    pygame.display.set_caption('Slide Puzzle')
+    pygame.display.set_caption('Slide Puzzle Game')
 
-    BASICFONT = pygame.font.Font('freesansbold.ttf', FONTSIZE)
+    BASICFONT = pygame.font.Font('HKGrotesk-Regular.ttf', FONTSIZE)
 
     # Store the option buttons and their rectangles in OPTIONS.
     SURF_RESET, RECT_RESET = makeText(
-        'Reset',    TC, TILECOLOR, WWIDTH - 120, WHEIGHT - 120)
+        'Reset', TC, TILECOLOR, WWIDTH - 120, WHEIGHT - 120)
     SURF_NEW, RECT_NEW = makeText(
         'New Game', TC, TILECOLOR, WWIDTH - 120, WHEIGHT - 90)
-    SURF_QUIT, RECT_QUIT = makeText(
-        'End Game', TC, TILECOLOR, WWIDTH - 120, WHEIGHT - 30)
     SURF_SOLVE, RECT_SOLVE = makeText(
-        'Solve',    TC, TILECOLOR, WWIDTH - 120, WHEIGHT - 60)
+        'Solve', TC, TILECOLOR, WWIDTH - 120, WHEIGHT - 60)
 
     mainBoard, solutionSeq = generateNewPuzzle(80)
 
@@ -94,13 +99,13 @@ def main():
 
         Move = None  # the direction, if any, a tile should slide
 
-        msg = 'Click tile or press arrow keys to slide. r to reset' # contains the message to show in the upper left corner.
+        msg = 'Click tile or press arrow keys to slide. r to reset'  # contains the message to show in the upper left corner.
 
         if mainBoard == SOLVEDBOARD:
 
             msg = 'Solved! Use ijkl to change size and n for new puzzle'
 
-            drawBoard(mainBoard, msg)
+            drawBoard(mainBoard, msg, 0)
 
             checkForQuit()
 
@@ -109,7 +114,7 @@ def main():
 
             if event.type == VIDEORESIZE:
                 resizeWindow(event.size)
-                drawBoard(mainBoard, msg)
+                drawBoard(mainBoard, msg, 0)
 
             elif event.type == MOUSEBUTTONUP:
 
@@ -134,8 +139,6 @@ def main():
                         allMoves = []
 
                     # clicked on the End Game button
-                    elif RECT_QUIT.collidepoint(event.pos):
-                        terminate()
                 else:    # check if the clicked tile was next to the blank spot
 
                     blankx, blanky = getBlankPosition(mainBoard)
@@ -170,7 +173,6 @@ def main():
 
                     Move = DOWN
 
-
                 elif event.key == K_r:
                     mainBoard = getStartingBoard()
                     # SOLVEDBOARD = getStartingBoard()  # should not be necessary
@@ -185,19 +187,22 @@ def main():
 
                     if event.key == K_i:
                         BHEIGHT -= 1
-                        if BHEIGHT <= 1: BHEIGHT = 2  # lowest possible height is 2
+                        if BHEIGHT <= 1:
+                            BHEIGHT = 2  # lowest possible height is 2
 
                     elif event.key == K_k:
                         BHEIGHT += 1
 
                     elif event.key == K_j:
                         BWIDTH -= 1
-                        if BWIDTH <= 1: BWIDTH = 2  # lowest possible width is 2
+                        if BWIDTH <= 1:
+                            BWIDTH = 2  # lowest possible width is 2
 
                     elif event.key == K_l:
                         BWIDTH += 1
 
-                    else: continue
+                    else:
+                        continue
 
                     updateMargins()
                     mainBoard = getStartingBoard()
@@ -207,9 +212,14 @@ def main():
             elif event.type == QUIT:
                 running = False
 
+            elif event.type == QUIT:
+                running = False
+
         if Move:
 
-            slideAnimation(mainBoard, Move, msg, 8)  # show slide on screen
+            # show slide on screen
+            slideAnimation(mainBoard, Move,
+                           'Click tile or press arrow keys to slide.', 8, 70)
 
             makeMove(mainBoard, Move)
 
@@ -246,8 +256,9 @@ def resizeWindow(size):
     WWIDTH, WHEIGHT = size
     updateMargins()
 
-def getStartingBoard():# Return a board data structure with tiles in the solved state.
-     
+
+def getStartingBoard():  # Return a board data structure with tiles in the solved state.
+
     counter = 1
     board = []
     for x in range(BWIDTH):
@@ -258,7 +269,7 @@ def getStartingBoard():# Return a board data structure with tiles in the solved 
         board.append(column)
         counter -= BWIDTH * (BHEIGHT - 1) + BWIDTH - 1
 
-    board[BWIDTH-1][BHEIGHT-1] = None
+    board[BWIDTH - 1][BHEIGHT - 1] = None
     return board
 
 
@@ -342,8 +353,8 @@ def getSpotClicked(board, x, y):
 def drawTile(tilex, tiley, number, driftx=0, drifty=0):  # drawing a tile
 
     left, top = getpixelcoord(tilex, tiley)
-    pygame.draw.rect(surfdisplay, TILECOLOR,
-                     (left + driftx, top + drifty, TSIZE, TSIZE))
+    pygame.draw.rect(surfdisplay, BLACK, (left + driftx, top + drifty, TSIZE, TSIZE), border_radius=8)
+    pygame.draw.rect(surfdisplay, GREEN, (left + driftx, top + drifty, TSIZE, TSIZE), 3, border_radius=8)
     textSurf = BASICFONT.render(str(number), True, TC)
     textRect = textSurf.get_rect()
     textRect.center = left + int(TSIZE / 2) + \
@@ -355,7 +366,7 @@ def drawTile(tilex, tiley, number, driftx=0, drifty=0):  # drawing a tile
 # creating Surface and Rect objects for some text like a text box
 def makeText(text, color, bgcolor, top, left):
 
-    textSurf = BASICFONT.render(text, True, color, bgcolor)
+    textSurf = BASICFONT.render(text, True, WHITE, BGCOLOR)
     textRect = textSurf.get_rect()
     textRect.topleft = (top, left)
     return (textSurf, textRect)
@@ -368,11 +379,15 @@ def timer():
     return counter, font
 
 
-def drawBoard(board, message):  # current board creation
+def drawBoard(board, message, x):  # current board creation
 
     surfdisplay.fill(BGCOLOR)
+    surfdisplay.blit(SURF_RESET, RECT_RESET)
+    surfdisplay.blit(SURF_NEW, RECT_NEW)
+    surfdisplay.blit(SURF_SOLVE, RECT_SOLVE)
+
     if message:   # message on top left corner
-        textSurf, textRect = makeText(message, MESSAGECOLOR, BGCOLOR, 5, 5)
+        textSurf, textRect = makeText(message, MESSAGECOLOR, WHITE, ((WWIDTH / 3) - x), WHEIGHT / 6)
         surfdisplay.blit(textSurf, textRect)
 
     for tilex in range(len(board)):
@@ -381,7 +396,7 @@ def drawBoard(board, message):  # current board creation
                 drawTile(tilex, tiley, board[tilex][tiley])
 
 
-def slideAnimation(board, direction, message, animationSpeed):  # tile sliding action
+def slideAnimation(board, direction, message, animationSpeed, x):  # tile sliding action
     # Note: This function does not check if the move is valid.
 
     blankx, blanky = getBlankPosition(board)
@@ -402,7 +417,7 @@ def slideAnimation(board, direction, message, animationSpeed):  # tile sliding a
         movey = blanky
 
     # prepare the base surface
-    drawBoard(board, message)
+    drawBoard(board, message, x)
     baseSurf = surfdisplay.copy()
 
     # draw a blank space over the moving tile on the baseSurf Surface.
@@ -450,14 +465,14 @@ def generateNewPuzzle(numSlides):
 
     sequence = []
     board = getStartingBoard()
-    drawBoard(board, '')
+    drawBoard(board, '', 0)
     pygame.display.update()
     # pygame.time.wait(500)  # pause 500 milliseconds for effect (painful if user triggered)
     lastMove = None
 
     for i in range(numSlides):
         move = getRandomMove(board, lastMove)
-        slideAnimation(board, move, 'Generating new puzzle...', int(TSIZE / 3))
+        slideAnimation(board, move, 'Generating new puzzle...', int(TSIZE / 3), -5)
         makeMove(board, move)
         sequence.append(move)
         lastMove = move
@@ -484,7 +499,7 @@ def resetAnimation(board, allMoves):
         elif move == LEFT:
             oppositeMove = RIGHT
 
-        slideAnimation(board, oppositeMove, '', int(TSIZE / 2))
+        slideAnimation(board, oppositeMove, '', int(TSIZE / 2), 0)
         makeMove(board, oppositeMove)
 
 
